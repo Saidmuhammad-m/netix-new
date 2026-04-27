@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>MFC NETIX | Futbol Media Jamoasi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Futbol uslubidagi jonli fon: to‘p va maydon effekti */
+        .football-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: linear-gradient(125deg, #0a2f1f 0%, #051a0e 50%, #0a331f 100%);
+        }
+
+        .football-bg::before {
+            content: "⚽";
+            font-size: 280px;
+            position: absolute;
+            bottom: -50px;
+            right: -80px;
+            opacity: 0.07;
+            animation: rotateBall 20s infinite linear;
+        }
+
+        @keyframes rotateBall {
+            0% { transform: rotate(0deg) translateX(0); }
+            100% { transform: rotate(360deg) translateX(30px); }
+        }
+
+        /* maydon chiziqlari */
+        .football-bg::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 40px),
+            repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 40px);
+            pointer-events: none;
+        }
+
+        /* aylanma to‘plar fon */
+        .floating-balls {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .floating-balls i {
+            position: absolute;
+            font-size: 30px;
+            opacity: 0.1;
+            animation: floatBall 15s infinite;
+            color: #00ffb3;
+        }
+
+        @keyframes floatBall {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.15; }
+            90% { opacity: 0.15; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 18px 20px 90px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Splash (birinchi oyna) */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000dd;
+            backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1s ease, visibility 0.5s;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .splash-logo {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            object-fit: cover;
+            animation: rotateZoom 1.2s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+            box-shadow: 0 0 40px #00ffaa;
+            border: 3px solid #0affc0;
+        }
+
+        @keyframes rotateZoom {
+            0% { transform: rotate(0deg) scale(0.5); opacity: 0; }
+            60% { transform: rotate(340deg) scale(1.05); }
+            100% { transform: rotate(360deg) scale(1); opacity: 1; }
+        }
+
+        .splash-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-top: 24px;
+            background: linear-gradient(135deg, #ffffff, #00ffc3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .splash-desc {
+            font-size: 1rem;
+            max-width: 280px;
+            margin: 16px auto;
+            color: #b5ffea;
+        }
+
+        .enter-btn {
+            margin-top: 30px;
+            background: #00ffb3;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #021007;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0,255,179,0.4);
+            transition: 0.2s;
+            animation: bounceBtn 1.2s infinite;
+        }
+
+        @keyframes bounceBtn {
+            0%,100%{ transform: translateY(0); }
+            50%{ transform: translateY(-5px); }
+        }
+
+        .main-content {
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        .main-content.visible {
+            opacity: 1;
+        }
+
+        .mini-logo {
+            text-align: center;
+            margin: 10px 0 20px;
+        }
+        .mini-logo-img {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #00ffc3;
+            box-shadow: 0 0 15px rgba(0,255,195,0.3);
+        }
+        .netix-name {
+            font-size: 1.9rem;
+            font-weight: 800;
+            background: linear-gradient(135deg,#fff,#00ffc3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-top: 6px;
+        }
+
+        /* avtomatik slayder */
+        .jamoa-slider {
+            margin: 20px 0;
+            border-radius: 28px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .slider-img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* jamoa tugmasi */
+        .team-btn-wrap {
+            text-align: center;
+            margin: 30px 0 20px;
+        }
+        .show-team-btn {
+            background: linear-gradient(95deg, #00b38f, #00ffc3);
+            padding: 14px 28px;
+            border-radius: 60px;
+            border: none;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #021007;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,255,187,0.3);
+            transition: 0.2s;
+        }
+
+        .team-members-section {
+            margin-top: 35px;
+            display: none;
+        }
+        .team-members-section.show {
+            display: block;
+            animation: fadeSlide 0.5s ease;
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(20px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 10px 0 30px;
+        }
+        .member-card {
+            background: rgba(10, 25, 18, 0.85);
+            backdrop-filter: blur(8px);
+            border-radius: 28px;
+            overflow: hidden;
+            border: 1px solid rgba(0,255,195,0.4);
+            transition: 0.2s;
+            text-align: center;
+            padding-bottom: 16px;
+        }
+        .member-card:hover {
+            transform: translateY(-5px);
+            border-color: #00ffc3;
+            box-shadow: 0 10px 25px rgba(0,255,195,0.2);
+        }
+        .member-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #1f2a3a;
+        }
+        .member-name {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin: 12px 0 6px;
+            color: #00ffc3;
+        }
+        .member-role {
+            font-size: 0.85rem;
+            color: #ffde9c;
+            padding: 0 12px 10px;
+            font-weight: 500;
+        }
+
+        .info-box {
+            background: rgba(0, 30, 25, 0.7);
+            border-radius: 36px;
+            padding: 24px 20px;
+            margin: 28px 0;
+            backdrop-filter: blur(5px);
+            border-left: 5px solid #00ffc3;
+        }
+        .mission-text {
+            font-size: 1rem;
+            line-height: 1.4;
+            margin-bottom: 18px;
+        }
+        .address {
+            font-size: 0.95rem;
+            background: #001f1ad9;
+            padding: 12px;
+            border-radius: 24px;
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+        }
+
+        .social-row {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin: 20px 0;
+        }
+        .social-btn {
+            background: #0b1f1b;
+            padding: 12px 24px;
+            border-radius: 60px;
+            text-decoration: none;
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #00ffc3;
+            transition: 0.2s;
+        }
+        .social-btn i {
+            font-size: 1.5rem;
+            color: #00ffc3;
+        }
+
+        /* musiqa tugmasi */
+        .music-player-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #00ffb3d9;
+            backdrop-filter: blur(12px);
+            padding: 10px 20px;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+            cursor: pointer;
+            font-weight: bold;
+            color: #0a1f18;
+            border: none;
+            box-shadow: 0 0 15px #00ffc3;
+        }
+
+        .developer-tag {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #000000aa;
+            backdrop-filter: blur(8px);
+            padding: 8px 16px;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            z-index: 99;
+            cursor: pointer;
+            border: 1px solid #00ffc3;
+            color: #bcffec;
+        }
+
+        @media (max-width: 500px) {
+            .members-grid { gap: 12px; }
+            .member-name { font-size: 1rem; }
+            .member-img { height: 160px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="football-bg"></div>
+<div class="floating-balls" id="floatingBalls"></div>
+
+<!-- Splash -->
+<div class="splash-screen" id="splashScreen">
+    <img src="rasm11.jpg" class="splash-logo" alt="logo" onerror="this.src='https://placehold.co/200x200?text=rasm11.jpg'">
+    <div class="splash-title">MFC NETIX</div>
+    <div class="splash-desc">Futbol media jamoasi | Yangi avlod</div>
+    <button class="enter-btn" id="enterBtn">KIRISH ⚡</button>
+</div>
+
+<div class="container main-content" id="mainContent">
+    <div class="mini-logo">
+        <img src="rasm11.jpg" class="mini-logo-img" alt="logo" onerror="this.src='https://placehold.co/100x100?text=logo'">
+        <div class="netix-name">MFC NETIX</div>
+    </div>
+
+    <!-- Avtomatik slayder (2 sekundda o‘zgaradi) -->
+    <div class="jamoa-slider">
+        <img class="slider-img" id="teamSliderImg" src="rasm1.jpg" onerror="this.src='https://placehold.co/600x280?text=Jamoa+rasmi'">
+    </div>
+
+    <div class="team-btn-wrap">
+        <button class="show-team-btn" id="showTeamBtn"><i class="fas fa-users"></i> JAMOA A'ZOLARI</button>
+    </div>
+
+    <div id="teamMembersSection" class="team-members-section">
+        <div class="members-grid" id="membersGrid"></div>
+    </div>
+
+    <div class="info-box">
+        <p class="mission-text"><i class="fas fa-bullseye" style="color:#00ffc3"></i> <strong>MFC NETIX maqsadi:</strong> Futbol olamidagi eng sara kontentni yaratish, yosh iste’dodlarni qo‘llab-quvvatlash va muxlislarga eng yaqin media bo‘lish. Biz — futbol muhabbati bilan yashaymiz!</p>
+        <div class="address">
+            <i class="fas fa-map-marker-alt" style="color:#00ffc3"></i> <strong>Manzil:</strong> BUXORO VILOYAT, JONDOR TUMAN, STADION >> ALELI ARENA
+        </div>
+    </div>
+
+    <div class="social-row">
+        <a href="https://t.me/netix_mfc" target="_blank" class="social-btn"><i class="fab fa-telegram"></i> Telegram</a>
+        <a href="https://instagram.com/mfc.netix" target="_blank" class="social-btn"><i class="fab fa-instagram"></i> Instagram</a>
+    </div>
+</div>
+
+<button class="music-player-btn" id="musicToggleBtn">
+    <i class="fas fa-music"></i> Musiqa
+</button>
+<audio id="bgMusic" loop src="music.mp3"></audio>
+
+<div class="developer-tag" id="developerBtn">
+    👨‍💻 developer
+</div>
+
+<script>
+    // 1. SPLASH
+    const splash = document.getElementById('splashScreen');
+    const mainDiv = document.getElementById('mainContent');
+    const enter = document.getElementById('enterBtn');
+    enter.addEventListener('click', () => {
+        splash.style.opacity = '0';
+        splash.style.visibility = 'hidden';
+        setTimeout(() => {
+            splash.style.display = 'none';
+            mainDiv.classList.add('visible');
+        }, 500);
+    });
+
+    // 2. AVTOMATIK SLAYDER (har 2 sekundda rasm1, rasm2, rasm3)
+    const teamImages = ["rasm1.jpg", "rasm2.jpg", "rasm3.jpg"];
+    let autoIndex = 0;
+    const sliderImg = document.getElementById('teamSliderImg');
+    function autoSlide() {
+        autoIndex = (autoIndex + 1) % teamImages.length;
+        sliderImg.src = teamImages[autoIndex];
+        sliderImg.onerror = () => { sliderImg.src = "https://placehold.co/600x280?text=rasm"+(autoIndex+1); };
+    }
+    setInterval(autoSlide, 2000);
+
+    // 3. JAMOA AZOLARI (to‘g‘rilangan ism va tavsif)
+    const membersData = [
+        { img: "rasm4.jpg", name: "JAVOXIR", role: "CHAP OYOQ🔥" },
+        { img: "rasm5.jpg", name: "AZIZ", role: "ATTACKER" },
+        { img: "rasm6.jpg", name: "ABDUAZIM", role: "ENG KERAKLI SHAXS" },
+        { img: "rasm7.jpg", name: "YASHINBEK", role: "JAMOA YULDUZ" },
+        { img: "rasm8.jpg", name: "LOCHIN", role: "TEZLIK+AQL" },
+        { img: "rasm9.jpg", name: "ELBEK", role: "SEHRGAR" },
+        { img: "rasm10.jpg", name: "TOIR DUXTUR", role: "BUNISI NIXUYA" }
+    ];
+
+    const membersGrid = document.getElementById('membersGrid');
+    const teamSection = document.getElementById('teamMembersSection');
+    const showTeamBtn = document.getElementById('showTeamBtn');
+
+    membersData.forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'member-card';
+        card.innerHTML = `
+            <img class="member-img" src="${m.img}" alt="${m.name}" onerror="this.src='https://placehold.co/300x200?text=${m.name}'">
+            <div class="member-name">${m.name}</div>
+            <div class="member-role">${m.role}</div>
+        `;
+        membersGrid.appendChild(card);
+    });
+
+    showTeamBtn.addEventListener('click', () => {
+        if (!teamSection.classList.contains('show')) {
+            teamSection.classList.add('show');
+            setTimeout(() => {
+                teamSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+    });
+
+    // 4. MUSIQA BOSHQARUVI
+    const audio = document.getElementById('bgMusic');
+    const musicBtn = document.getElementById('musicToggleBtn');
+    let isPlaying = false;
+    musicBtn.addEventListener('click', () => {
+        if (isPlaying) {
+            audio.pause();
+            musicBtn.innerHTML = '<i class="fas fa-music"></i> Musiqa';
+            isPlaying = false;
+        } else {
+            audio.play().catch(e => console.log("avtomatik bloklandi"));
+            musicBtn.innerHTML = '<i class="fas fa-pause"></i> To‘xtat';
+            isPlaying = true;
+        }
+    });
+
+    // 5. DEVELOPER
+    const devBtn = document.getElementById('developerBtn');
+    devBtn.addEventListener('click', () => {
+        window.open('https://instagram.com/developer_muxtorov', '_blank');
+    });
+
+    // 6. FONGA SUZUVCHI FUTBOL TO'PLARI
+    const floatContainer = document.getElementById('floatingBalls');
+    for (let i = 0; i < 12; i++) {
+        const ball = document.createElement('i');
+        ball.className = 'fas fa-futbol';
+        ball.style.left = Math.random() * 100 + '%';
+        ball.style.animationDuration = 12 + Math.random() * 15 + 's';
+        ball.style.animationDelay = Math.random() * 10 + 's';
+        ball.style.fontSize = 25 + Math.random() * 35 + 'px';
+        ball.style.opacity = 0.08 + Math.random() * 0.1;
+        floatContainer.appendChild(ball);
+    }
+</script>
+</body>
+</html>
